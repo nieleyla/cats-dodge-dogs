@@ -3,7 +3,7 @@ import pygame
 pygame.init()
 
 window_width = 800
-window_height = 1100
+window_height = 1200
 
 game_window = pygame.display.set_mode((window_width, window_height))
 
