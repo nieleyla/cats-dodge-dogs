@@ -11,9 +11,9 @@ game_window = pygame.display.set_mode((window_width, window_height))
 pygame.display.set_caption("Crossing Game")
 
 #load images
-cat_image = pygame.image.load('C:/Users/niede/Pictures/cat_walk_1.png')
-cat_walk_frames = [pygame.image.load(f'C:/Users/niede/Pictures/cat_walk_{i}.png') for i in range(1, 3+1)]
-background_image = pygame.image.load('C:/Users/niede/Pictures/background.png')
+cat_image = pygame.image.load('assets/cat_walk_1.png')
+cat_walk_frames = [pygame.image.load(f'assets/cat_walk_{i}.png') for i in range(1, 3+1)]
+background_image = pygame.image.load('assets/background.png')
 stationary_cat_image = pygame.transform.scale(cat_walk_frames[0], (100, 100))
 
 #resize the cat
