@@ -1,0 +1,10 @@
+{
+    "image": "mcr.microsoft.com/devcontainers/universal:2",
+    "features": {
+        "ghcr.io/devcontainers/features/desktop-lite:1": {
+            "password": "QcMJV8jjsjQNju",
+            "webPort": "6080",
+            "vncPort": "5901"
+        }
+    }
+}
