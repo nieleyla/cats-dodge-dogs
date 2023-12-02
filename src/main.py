@@ -3,8 +3,8 @@ import pygame
 pygame.init()
 
 #game window
-window_width = 1200
-window_height = 800
+window_width = 800
+window_height = 1200
 game_window = pygame.display.set_mode((window_width, window_height))
 pygame.display.set_caption("Crossing Game")
 
@@ -27,8 +27,8 @@ grey_cat_walk_3 = get_sprite(sprite_sheet, 490, 292, 11, 22)
 cat_walk_frames = [grey_cat_walk_1, grey_cat_walk_2, grey_cat_walk_3]
 
 #resize the cat
-grey_cat = pygame.transform.scale(grey_cat, (100, 100))
-cat_walk_frames = [pygame.transform.scale(frame, (100, 100)) for frame in cat_walk_frames]
+grey_cat = pygame.transform.scale(grey_cat, (33, 66))
+cat_walk_frames = [pygame.transform.scale(frame, (33, 66)) for frame in cat_walk_frames]
 
 #cat_rect = smaller_cat_image.get_rect()
 cat_rect = grey_cat.get_rect()
@@ -83,9 +83,8 @@ while running:
                 frame_count = current_time
                 current_frame = (current_frame + 1) % len(cat_walk_frames)
                 cat_image = cat_walk_frames[current_frame]
-                smaller_cat_image = cat_walk_frames[current_frame]
         elif not is_moving:
-                smaller_cat_image = grey_cat
+                cat_image = grey_cat
 
         for i, (x, y) in enumerate(tile_positions):
                 y += background_movement_speed
@@ -100,7 +99,7 @@ while running:
                 game_window.blit(grass_tile, (x, y))
         
         #draw cat
-        game_window.blit(grey_cat, cat_rect)
+        game_window.blit(cat_image, cat_rect)
         
         #update display
         pygame.display.update()
