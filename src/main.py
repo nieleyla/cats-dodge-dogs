@@ -26,19 +26,23 @@ grey_cat_walk_2 = get_sprite(sprite_sheet, 458, 291, 11, 22)
 grey_cat_walk_3 = get_sprite(sprite_sheet, 490, 292, 11, 22)
 cat_walk_frames = [grey_cat_walk_1, grey_cat_walk_2, grey_cat_walk_3]
 
-#resize the cat
+#resize the cat, resize grass
 grey_cat = pygame.transform.scale(grey_cat, (33, 66))
 cat_walk_frames = [pygame.transform.scale(frame, (33, 66)) for frame in cat_walk_frames]
+new_tile_width = grass_tile.get_width() * 2
+new_tile_height = grass_tile.get_height() * 2
+scaled_grass_tile = pygame.transform.scale(grass_tile, (new_tile_width, new_tile_height))
 
-#cat_rect = smaller_cat_image.get_rect()
 cat_rect = grey_cat.get_rect()
 cat_rect.x = window_width // 2 - cat_rect.width // 2  # Center horizontally
 cat_rect.y = window_height - cat_rect.height - 150  # Align to the bottom
 
-tile_positions = []
-for y in range(0, window_height, tile_height):
-        for x in range(0, window_width, tile_width):
-                tile_positions.append((x, y))
+#surface for drawing the tiles
+tile_surface = pygame.Surface(game_window.get_size())
+
+for y in range(0, window_height, new_tile_height):
+        for x in range(0, window_width, new_tile_width):
+                tile_surface.blit(scaled_grass_tile, (x, y))
 
 #game loop
 running = True
@@ -85,20 +89,11 @@ while running:
                 cat_image = cat_walk_frames[current_frame]
         elif not is_moving:
                 cat_image = grey_cat
-
-        for i, (x, y) in enumerate(tile_positions):
-                y += background_movement_speed
-                if y > window_height:
-                        y -= window_height + tile_height
-                elif y < -tile_height:
-                        y += window_height + tile_height
-                tile_positions[i] = (x, y)
-
-        game_window.fill((255, 255, 255))
-        for x, y in tile_positions:
-                game_window.blit(grass_tile, (x, y))
         
-        #draw cat
+        game_window.fill((255, 255, 255))
+        
+        #draw cat, draw tiles
+        game_window.blit(tile_surface, (0, 0))
         game_window.blit(cat_image, cat_rect)
         
         #update display
