@@ -95,17 +95,18 @@ while running:
                         scroll_movement = -scroll_speed
                         is_moving = True
                 
-        tile_surface.scroll(dy=scroll_movement)
+                tile_surface.scroll(dy=scroll_movement)
                 
-        if scroll_movement < 0:
+                if scroll_movement > 0:
+                        y_pos = -buffer_height
+                elif scroll_movement < 0:
+                        y_pos = window_height + buffer_height - new_tile_height
                 for x in range(0, window_width, new_tile_width):
                         chosen_texture = random.choice(scaled_textures)
-                        tile_surface.blit(chosen_texture, (x, window_height + buffer_height - new_tile_height))
-        elif scroll_movement > 0:
-                for x in range(0, window_width, new_tile_width):
-                        chosen_texture = random.choice(scaled_textures)
-                        tile_surface.blit(chosen_texture, (x, -buffer_height))            
-
+                        tile_surface.blit(chosen_texture, (x, y_pos))
+                        
+        game_window.blit(tile_surface, (0, 0), area=(0, buffer_height, window_width, window_height))
+        
         #animation logic
         current_time = pygame.time.get_ticks()
         if is_moving and current_time - frame_count > animation_speed:
