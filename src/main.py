@@ -38,7 +38,7 @@ def load_game_data(app_name=GAME_TITLE, file_name=SAVE_FILE_NAME):
     if os.path.exists(file_path):
         with open(file_path, 'r') as file:
             return json.load(file)
-    return None
+    return {"highscore": 0}
 
 ### Write high score to file
 def write_high_score(score):
