@@ -410,7 +410,7 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, viewport_y=WORLD_HEIGHT-
                 cat_rect.y = WORLD_HEIGHT - 150 - REF_CAT_HEIGHT
                 viewport_y = WORLD_HEIGHT - WINDOW_HEIGHT
                 border_reaches = 0
-                dogs = pick_dog()
+                dogs = [pick_dog()]
                 high_score = border_reaches
                 write_high_score(border_reaches)
                 display_menu(cursor, ui, border_reaches, high_score)
