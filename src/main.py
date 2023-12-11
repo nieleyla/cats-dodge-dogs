@@ -1,92 +1,54 @@
 # Imports
+import os
+import platform
+import json
 import pygame
 import random
 import numpy as np
 from perlin_noise import PerlinNoise
 
-
-
-# Constants
-
-## Game window
-GAME_TITLE = "Cats Dodge Dogs"
-
-### Dimensions
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 1200
-
-
-## Movement
-
-## Movement speed
-CAT_SPEED_X = 8 # Horizontal movement speed
-CAT_SPEED_Y = 16 # Vertical movement speed
-DOG_SPEED_X = 8 # Horizontal movement speed
-DOG_SPEED_Y = 8 # Vertical movement speed
-
-
-## Animation
-ANIMATION_SPEED = 60
-FPS = 60
-
-
-### Cat
-CAT_WALK_FRAMES = 4 # Number of frames in the cat walking animation
-REF_CAT_WIDTH = 23
-REF_CAT_HEIGHT = 21
-CAT_SCALE_X = 5
-CAT_SCALE_Y = 5
-CAT_SPRITE_COORDINATES = {
-    'N': [(394, 291, 11, 22), (426, 292, 11, 22), (458, 291, 11, 22), (490, 292, 11, 22)], 
-    'NE': [(389, 358, 23, 19), (422, 357, 22, 20), (453, 358, 23, 18), (486, 357, 22, 20)],
-    'E': [(391, 422, 21, 18), (423, 421, 21, 19), (455, 422, 21, 18), (487, 421, 21, 19)],
-    'SE': [(389, 486, 23, 20), (422, 485, 22, 21), (453, 486, 23, 20), (486, 485, 22, 21)],
-    'S': [(394, 33, 11, 25), (426, 34, 11, 25), (458, 33, 11, 25), (490, 34, 11, 25)],
-    'SW': [(388, 102, 23, 20), (420, 101, 22, 21), (452, 102, 23, 20), (484, 101, 22, 21)],
-    'W': [(388, 166, 21, 18), (420, 165, 21, 19), (452, 166, 21, 18), (484, 165, 21, 19)],
-    'NW': [(388, 230, 23, 19), (420, 229, 22, 20), (452, 230, 23, 18), (484, 229, 22, 20)],
-    'ID': [(266, 292, 11, 24), (227, 422, 25, 18), (362, 42, 11, 18), (228, 166, 25, 18)]
-}
-
-### Dog
-DOG_WALK_FRAMES = 4 # Number of frames in the dog walking animation
-REF_DOG_WIDTH = 23
-REF_DOG_HEIGHT = 21
-DOG_SCALE_X = 5
-DOG_SCALE_Y = 5
-DOG_SPRITE_COORDINATES = {
-    'N': [(394, 291, 11, 22), (426, 292, 11, 22), (458, 291, 11, 22), (490, 292, 11, 22)], 
-    'NE': [(389, 358, 23, 19), (422, 357, 22, 20), (453, 358, 23, 18), (486, 357, 22, 20)],
-    'E': [(391, 422, 21, 18), (423, 421, 21, 19), (455, 422, 21, 18), (487, 421, 21, 19)],
-    'SE': [(389, 486, 23, 20), (422, 485, 22, 21), (453, 486, 23, 20), (486, 485, 22, 21)],
-    'S': [(394, 33, 11, 25), (426, 34, 11, 25), (458, 33, 11, 25), (490, 34, 11, 25)],
-    'SW': [(388, 102, 23, 20), (420, 101, 22, 21), (452, 102, 23, 20), (484, 101, 22, 21)],
-    'W': [(388, 166, 21, 18), (420, 165, 21, 19), (452, 166, 21, 18), (484, 165, 21, 19)],
-    'NW': [(388, 230, 23, 19), (420, 229, 22, 20), (452, 230, 23, 18), (484, 229, 22, 20)],
-    'ID': [(266, 292, 11, 24), (227, 422, 25, 18), (362, 42, 11, 18), (228, 166, 25, 18)]
-}
-
-
-## Game world
-
-### Dimensions
-TILE_SIZE = 128
-TILE_SCALE = 4
-WORLD_WIDTH = WINDOW_WIDTH
-LEVEL_HEIGHT = 3
-WORLD_HEIGHT = WINDOW_HEIGHT * LEVEL_HEIGHT
-BORDER_HEIGHT = TILE_SIZE  # Height of the border area
-BORDER_Y = 0  # Y position of the border (at the top of the world)
-
-### Noise
-NOISE_OCTAVES = 6
-NOISE_CLUSTER_SIZE = 48
-NOISE_SURFACE_SIZE = 128
-NOISE_ALPHA = 12
-
+from constants import *
 
 
 # Functions
+
+## Saving and loading
+
+### Get platform-specific path to save directory
+def get_save_path(app_name=GAME_TITLE):
+    home = os.path.expanduser('~')
+    if platform.system() == 'Windows':
+        return os.path.join(os.getenv('APPDATA', home), app_name)
+    elif platform.system() == 'Darwin':  # macOS
+        return os.path.join(home, 'Library', 'Application Support', app_name)
+    else:  # Linux and other Unix-like OS
+        return os.path.join(home, '.local', 'share', app_name)
+
+### Save game data to file
+def save_game_data(data, app_name=GAME_TITLE, file_name=SAVE_FILE_NAME):
+    save_path = get_save_path(app_name)
+    os.makedirs(save_path, exist_ok=True)
+    file_path = os.path.join(save_path, file_name)
+    with open(file_path, 'w') as file:
+        json.dump(data, file)
+
+### Load game data from file
+def load_game_data(app_name=GAME_TITLE, file_name=SAVE_FILE_NAME):
+    file_path = os.path.join(get_save_path(app_name), file_name)
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            return json.load(file)
+    return None
+
+### Write high score to file
+def write_high_score(score):
+    data = load_game_data()
+    if data is None:
+        data = {'highscore': score}
+    else:
+        data['highscore'] = max(score, data['highscore'])
+    save_game_data(data)
+
 
 ## Asset loading and sprite extraction
 
@@ -101,10 +63,12 @@ def get_sprite(sheet, x, y, width, height, scale_x, scale_y):
         sprite = pygame.transform.scale(sprite, (width*scale_x, height*scale_y))
     return sprite
 
-def generate_sprites(sheet, coordinates):
+def generate_sprites(sheet, coordinates, scale_x, scale_y):
     sprites = {}
     for direction, coordinates in coordinates.items():
-        sprites[direction] = [get_sprite(sheet, *coord, CAT_SCALE_X, CAT_SCALE_Y) for coord in coordinates]
+        sprites[direction] = [get_sprite(sheet, *coord, scale_x, scale_y) for coord in coordinates]
+    if 'E' in sprites and 'W' not in sprites:
+        sprites['W'] = [pygame.transform.flip(sprite, True, False) for sprite in sprites['E']]
     return sprites
 
 
@@ -131,16 +95,36 @@ def draw_noise(octaves=NOISE_OCTAVES):
 
 ## Drawing UI
 
+### Fading to black
+def fade_black(frames):
+    fade_surface = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
+    fade_surface.fill((0, 0, 0))
+    for alpha in range(0, 256, 5):
+        fade_surface.set_alpha(alpha)
+        game_window.blit(fade_surface, (0, 0))
+        pygame.display.update()
+        pygame.time.delay(frames)
+
 ### Drawing the completions counter
 def draw_counter(border_reaches):
     text = font.render(f"completions: {border_reaches}", True, (255, 255, 255))
-    game_window.blit(text, (WINDOW_WIDTH - text.get_width() - 20, 20))
+    text_shadow = font.render(f"completions: {border_reaches}", True, (0, 0, 64))
+    game_window.blit(text_shadow, (WINDOW_WIDTH // 2 + 110 + 2, 30+2))
+    game_window.blit(text, (WINDOW_WIDTH // 2 + 110, 30))
+
+### Drawing the high score counter
+def draw_high_score(high_score):
+    text = font.render(f"high score: {high_score}", True, (255, 255, 255))
+    text_shadow = font.render(f"high score: {high_score}", True, (0, 0, 64))
+    game_window.blit(text_shadow, (WINDOW_WIDTH // 2 + 110 + 2, 70+2))
+    game_window.blit(text, (WINDOW_WIDTH // 2 + 110, 70))
 
 ### Drawing the progress bar
 def draw_progress_bar(viewport_y):
     progress = viewport_y / (WORLD_HEIGHT - WINDOW_HEIGHT)
     bar_length = 200  # Total length of the bar
     filled_length = bar_length * progress
+    pygame.draw.rect(game_window, (0, 0, 0), (20 + 2, 20 + 2, bar_length, 20))  # Draw the shadow of the bar
     pygame.draw.rect(game_window, (255, 255, 255), (20, 20, bar_length, 20))  # Draw the border of the bar
     pygame.draw.rect(game_window, (0, 255, 0), (20, 20, filled_length, 20))  # Draw the filled part of the bar
 
@@ -154,6 +138,10 @@ def draw_level_border():
             fade_surface = pygame.Surface((1, 1), pygame.SRCALPHA)
             fade_surface.fill((0, 0, 0, alpha))
             world_surface.blit(fade_surface, (x, y))
+
+### Drawing the horizon
+def draw_horizon():
+    game_window.blit(ui['overlay_horizon'], (0, 0))
 
 ### Drawing the 'UP' arrow
 def draw_arrow(viewport_y, size=128, color=(255, 255, 0), alpha=128):
@@ -186,13 +174,11 @@ def draw_end_screen(border_reaches):
         game_window.blit(text, (WINDOW_WIDTH // 2 - text.get_width() // 2, WINDOW_HEIGHT // 2 - text.get_height() // 2))
         game_window.blit(fade_surface, (0, 0))
         pygame.display.update()
-        pygame.time.delay(32)
+        pygame.time.delay(20)
     pygame.display.update()
 
-## Drawing the game over screen
+## Drawing the game over screen: Fade in 'screen_death' from ui and then
 def draw_game_over_screen(border_reaches):
-
-    # Fading to black
     fade_surface = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
     fade_surface.fill((0, 0, 0))
     for alpha in range(0, 256, 5):  # Faster fade to black
@@ -217,15 +203,65 @@ def draw_game_over_screen(border_reaches):
     reach_rect = reach_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + 60))
     game_window.blit(reach_text, reach_rect)
     pygame.display.update()
+
+    # Display high score
+    high_score = load_game_data()["highscore"]
+    high_score_text = pygame.font.Font.render(font, f"high score: {high_score}", True, (255, 255, 255))
+    high_score_rect = high_score_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + 120))
+    game_window.blit(high_score_text, high_score_rect)
+    pygame.display.update()
     pygame.time.delay(1000)
+
+# Displaying the menu
+def display_menu(cursor, ui, border_reaches=0, high_score=0):
+    fade_black(10)
+    menu = True
+
+    while menu:
+        pygame.draw.rect(game_window, (0, 0, 0, 0), START_BUTTON_COORDINATES) # Start button rect
+        game_window.blit(ui['screen_start'], (0, 0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        keys = pygame.key.get_pressed()
+        game_window.blit(cursor, pygame.mouse.get_pos())
+
+        # Check for input
+        if keys[pygame.K_m]:
+            if pygame.mixer.music.get_volume() == 0.0:
+                pygame.mixer.music.set_volume(0.2)
+                pygame.time.delay(100)
+            else:
+                pygame.mixer.music.set_volume(0.0)
+                pygame.time.delay(100)
+        # TODO if keys[pygame.K_x]:
+        # TODO    write_high_score(0) 
+        if keys[pygame.K_q]:
+            pygame.quit()
+            quit()
+        if pygame.mouse.get_pressed()[0] or keys[pygame.K_RETURN] or keys[pygame.K_ESCAPE]:
+            if pygame.Rect(START_BUTTON_COORDINATES).collidepoint(pygame.mouse.get_pos()) or keys[pygame.K_RETURN]:
+                menu = False
+                fade_black(10)
+        # Cheat/debug keys
+        if keys[pygame.K_1]:
+            border_reaches += 1
+            high_score = border_reaches
+            write_high_score(high_score)
+            pygame.time.delay(100)
+
+        draw_counter(border_reaches)
+        draw_high_score(high_score)
+        pygame.display.update()
 
 
 ## Animation
 
 ### Retrieval of current animation frame
-def get_animation_frame(sprites, horizontal_movement, vertical_movement, current_frame, frame_count, last_movement, walk_frames=CAT_WALK_FRAMES):
+def get_animation_frame(sprites, horizontal_movement, vertical_movement, current_frame, frame_count, last_movement, walk_frames, animation_speed):
     current_time = pygame.time.get_ticks()
-    if current_time - frame_count > ANIMATION_SPEED:
+    if current_time - frame_count > animation_speed:
         frame_count = current_time
         current_frame = (current_frame + 1) % walk_frames
 
@@ -264,18 +300,28 @@ def draw_character(image, rect, viewport_y):
     screen_y = rect.y - viewport_y
     game_window.blit(image, (rect.x, screen_y))
 
+### Picking a dog
+def pick_dog(dogs=[]):
+    dog_weights = DOG_BASE_WEIGHTS.copy()
+    # Increase the weight of exotic and boss dogs based on the number of dogs
+    dog_weights['dog_exotic'] += len(dogs) * 0.2
+    dog_weights['boss_walking'] += len(dogs) * 0.1
+    dog_weights['boss_boxing'] += len(dogs) * 0.05
+    # Normalize weights
+    dog_weights = {k: v / sum(dog_weights.values()) for k, v in dog_weights.items()}
+    # Pick a dog
+    return np.random.choice(list(dog_weights.keys()), p=list(dog_weights.values()))
+
 
 # Game Loop
-def game_loop(cat_sprites, dog_sprites, cat_rect, dog_rect, viewport_y=WORLD_HEIGHT-WINDOW_HEIGHT, border_reaches=0):
+def game_loop(sprites, cursor, ui, cat_rect, dog_rects, viewport_y=WORLD_HEIGHT-WINDOW_HEIGHT, border_reaches=0, high_score=0):
 
     ## Initialization
     running = True
     clock = pygame.time.Clock()
-    viewport_x = 0
-    viewport_y = WORLD_HEIGHT - WINDOW_HEIGHT  # Start viewport at the bottom of the world
-    dogs = 1
     
     ### Animation initialization
+    first_run = True
     last_cat_movement = 'N'  # Start with player facing north
     last_dog_movements = ['E'] # Start with dogs facing east
     current_cat_frame = 0
@@ -286,6 +332,9 @@ def game_loop(cat_sprites, dog_sprites, cat_rect, dog_rect, viewport_y=WORLD_HEI
     vertical_cat_movement = 0
     horizontal_dog_movements = [1]
     vertical_dog_movements = [0]
+    dog_speeds = [DOG_SPEED_X]
+    dog_images = [None]
+    dogs = ['dog_white']
 
     ## Main game loop
     while running:
@@ -296,6 +345,11 @@ def game_loop(cat_sprites, dog_sprites, cat_rect, dog_rect, viewport_y=WORLD_HEI
                 running = False
 
         keys = pygame.key.get_pressed()
+
+        ### Check for ui input
+        if keys[pygame.K_ESCAPE] or first_run:
+            first_run = False
+            display_menu(cursor, ui, border_reaches, high_score)
 
         ### Movement
 
@@ -318,57 +372,67 @@ def game_loop(cat_sprites, dog_sprites, cat_rect, dog_rect, viewport_y=WORLD_HEI
         cat_rect.y -= vertical_cat_movement * CAT_SPEED_Y
 
         #### Dog movement (walking back and forth)
-        for i in range(dogs):
+        for i in range(len(dogs)):
             if dog_rects[i].x <= 0:
                 horizontal_dog_movements[i] = 1
-            if dog_rects[i].x >= WINDOW_WIDTH - 2*dog_rect[i].width:
+            if dog_rects[i].x >= WINDOW_WIDTH - dog_rects[i].width:
                 horizontal_dog_movements[i] = -1
             
+            dog_speeds[i] = DOG_SPEED_X + 2*border_reaches*random.randint(1, 100)*0.01
             #### Apply dog movement
-            dog_rect[i].x += horizontal_dog_movements[i] * (DOG_SPEED_X + 2*border_reaches*random.randint(1, 100)*0.01)
-            dog_rect[i].y -= vertical_dog_movements[i] * DOG_SPEED_Y
+            dog_rects[i].x += horizontal_dog_movements[i] * dog_speeds[i]
+            dog_rects[i].y -= vertical_dog_movements[i] * DOG_SPEED_Y
         
         #### Check for border collision
         if cat_rect.top <= viewport_y - cat_rect.height:
+            print(dogs)
             border_reaches += 1
-            dogs += 1
+            dogs.append(pick_dog(dogs))
+            high_score = border_reaches
+            write_high_score(high_score)
             # Dog spacing depends on number of dogs, number of completions, and LEVEL_HEIGHT:
-            dog_rects.append(idle_dog.get_rect(center=(REF_DOG_WIDTH, dog_start_y + min(dogs*LEVEL_HEIGHT*32*(random.randint(1, 100)*0.1)/border_reaches, int(WINDOW_HEIGHT/2)))))
+            dog_rects.append(idle_dog.get_rect(center=(REF_DOG_WIDTH, dog_start_y + min(len(dogs)*LEVEL_HEIGHT*32*(random.randint(1, 100)*0.1)/border_reaches, int(WINDOW_HEIGHT/2)))))
             horizontal_dog_movements.append(1)
             vertical_dog_movements.append(0)
             last_dog_movements.append(random.choice(['E','W']))
             dog_frame_counts.append(0)
             current_dog_frames.append(0)
+            dog_images.append(None)
+            dog_speeds.append(DOG_SPEED_X)
             draw_end_screen(border_reaches)
             cat_rect.y = WORLD_HEIGHT - 150 - REF_CAT_HEIGHT # Reset cat position
             viewport_y = WORLD_HEIGHT - WINDOW_HEIGHT # Reset viewport position
 
         ### Check for dog collision
-        for i in range(dogs):
+        for i in range(len(dogs)):
             if cat_rect.colliderect(dog_rects[i].inflate(dog_rects[i].width//2, -dog_rects[i].height*0.5)):
                 draw_game_over_screen(border_reaches)
                 cat_rect.y = WORLD_HEIGHT - 150 - REF_CAT_HEIGHT
                 viewport_y = WORLD_HEIGHT - WINDOW_HEIGHT
                 border_reaches = 0
-                dogs = 1
+                dogs = pick_dog()
+                high_score = border_reaches
+                write_high_score(border_reaches)
+                display_menu(cursor, ui, border_reaches, high_score)
 
         ### Drawing the visible part of the world
         visible_rect = pygame.Rect(0, viewport_y, WINDOW_WIDTH, WINDOW_HEIGHT)
         game_window.blit(world_surface, (0, 0), visible_rect)
 
-        ### Drawing UI
-        draw_counter(border_reaches)
-        draw_progress_bar(viewport_y)
-        draw_arrow(viewport_y, 96, (200, 200, 150), 200)
-
         ### Animation
-        cat_image, current_cat_frame, cat_frame_count, last_cat_movement = get_animation_frame(cat_sprites, horizontal_cat_movement, vertical_cat_movement, current_cat_frame, cat_frame_count, last_cat_movement, CAT_WALK_FRAMES)
+        cat_image, current_cat_frame, cat_frame_count, last_cat_movement = get_animation_frame(sprites['cat_grey'], horizontal_cat_movement, vertical_cat_movement, current_cat_frame, cat_frame_count, last_cat_movement, CAT_WALK_FRAMES, CAT_ANIMATION_SPEED)
         draw_character(cat_image, cat_rect, viewport_y)
         
-        for i in range(dogs):
-            dog_image, current_dog_frames[i], dog_frame_counts[i], last_dog_movements[i] = get_animation_frame(dog_sprites, horizontal_dog_movements[i], vertical_dog_movements[i], current_dog_frames[i], dog_frame_counts[i], last_dog_movements[i], DOG_WALK_FRAMES)
-            draw_character(dog_image, dog_rects[i], viewport_y + len(dog_rects)*DOG_SPEED_Y)
+        for i in range(len(dogs)):
+            dog_images[i], current_dog_frames[i], dog_frame_counts[i], last_dog_movements[i] = get_animation_frame(sprites[dogs[i]], horizontal_dog_movements[i], vertical_dog_movements[i], current_dog_frames[i], dog_frame_counts[i], last_dog_movements[i], DOG_WALK_FRAMES, DOG_ANIMATION_SPEED/(0.5*(border_reaches+1)))
+            draw_character(dog_images[i], dog_rects[i], viewport_y + len(dog_rects)*DOG_SPEED_Y)
         
+        ### Drawing UI
+        draw_arrow(viewport_y, 96, (200, 200, 150), 200)
+        draw_horizon()
+        draw_counter(border_reaches)
+        draw_progress_bar(viewport_y)
+
         ### Reset
         horizontal_cat_movement = 0
         vertical_cat_movement = 0
@@ -388,37 +452,47 @@ if __name__ == "__main__":
     pygame.init()
     game_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption(GAME_TITLE)
-    font = pygame.font.Font("./assets/pico-8.otf", 24)
 
     ## Load assets
-    ### Load sprite sheets from file
-    cat_sprite_sheet = load_sprite_sheet('assets/grey_cat_sprites.png')
-    dog_sprite_sheet = load_sprite_sheet('assets/grey_cat_sprites.png')
-    grass_sprite_sheet = load_sprite_sheet('assets/grass_sprites.png')
-    plant_sprite_sheet = load_sprite_sheet('assets/plant_sprites.png')
-    ### Extract sprites from sprite sheets
-    grass_texture_coordinates = [(x, 0, 32, 32) for x in range(0, 161, 32)]
-    grass_textures = [get_sprite(grass_sprite_sheet, *tex, TILE_SCALE, TILE_SCALE) for tex in grass_texture_coordinates]
-    plant_textures = [get_sprite(plant_sprite_sheet, *tex, TILE_SCALE, TILE_SCALE) for tex in grass_texture_coordinates]
-    ### Pregenerate sprites
-    cat_sprites = generate_sprites(cat_sprite_sheet, CAT_SPRITE_COORDINATES)
-    dog_sprites = generate_sprites(dog_sprite_sheet, DOG_SPRITE_COORDINATES)
+
+    ### Load, pregenerate, and store sprites
+    sprites = {sprite: generate_sprites(load_sprite_sheet(f'assets/sprites/{sprite}.png'), SPRITE_COORDINATES[sprite], SPRITE_SCALES[0][sprite], SPRITE_SCALES[1][sprite]) for sprite in SPRITE_LIST}
+    sprites.update({'grass': [get_sprite(load_sprite_sheet('assets/sprites/grass.png'), *coord, TILE_SCALE, TILE_SCALE) for coord in GRASS_COORDINATES]})
+    sprites.update({'plant': [get_sprite(load_sprite_sheet('assets/sprites/plants.png'), *coord, TILE_SCALE, TILE_SCALE) for coord in PLANT_COORDINATES]})
+    
+    ### Load and store UI elements
+    ui = {ui_element: pygame.image.load(f'assets/ui/{ui_element}.png') for ui_element in UI_LIST}
+    font = pygame.font.Font("./assets/ui/pico-8.otf", 24)
+    
+    ## Load high score and special assets if applicable
+    high_score = load_game_data()["highscore"]
+    if high_score >= SPECIAL_SCORE:
+        pygame.mixer.music.load('assets/audio/blippy_trance.mp3')
+        ui['screen_start'] = ui['screen_start_special']
+        cursor = pygame.image.load('assets/ui/cursor_black.cur')
+    else:
+        pygame.mixer.music.load('assets/audio/doobly_doo.mp3')
+        ui['screen_start'] = ui['screen_start_normal']
+        cursor = pygame.image.load('assets/ui/cursor_grey.cur')
 
     ## Initialize game world
     world_surface = pygame.Surface((WORLD_WIDTH, WORLD_HEIGHT))
-    fill_world_with_tiles([grass_textures,]) #plant_textures])
-    draw_level_border()
+    fill_world_with_tiles([sprites['grass'],]) # plant_textures])
     draw_noise()
+    #draw_level_border()
 
-    ## Initialize cat   
+    ## Initialize characters
+    ### Initialize cat   
     cat_start_y = WORLD_HEIGHT - int(0.25*WINDOW_HEIGHT) - REF_CAT_HEIGHT  # Start position near the bottom of the world
-    idle_cat = cat_sprites['ID'][0]
+    idle_cat = sprites['cat_grey']['ID'][0]
     cat_rect = idle_cat.get_rect(center=(WINDOW_WIDTH // 2, cat_start_y))
-
-    ## Initialize dog
+    ### Initialize dog
     dog_start_y = WORLD_HEIGHT - int(1.5*WINDOW_HEIGHT) - REF_DOG_HEIGHT
-    idle_dog = dog_sprites['ID'][0]
+    idle_dog = sprites['dog_white']['E'][0]
     dog_rects = [idle_dog.get_rect(center=(REF_DOG_WIDTH, dog_start_y))]
 
-    ## Start the game loop
-    game_loop(cat_sprites, dog_sprites, cat_rect, dog_rects)
+    ## Start the game
+    pygame.mouse.set_visible(False)
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.2)
+    game_loop(sprites, cursor, ui, cat_rect, dog_rects, high_score=high_score)
