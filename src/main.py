@@ -294,6 +294,11 @@ def display_menu(cursor, ui, border_reaches=0):
             high_score = border_reaches
             write_high_score(high_score)
             pygame.time.delay(100)
+        if keys[pygame.K_2]:
+            border_reaches = 0
+            high_score = border_reaches
+            write_high_score(high_score)
+            pygame.time.delay(100)
 
         high_score = load_game_data()["highscore"]
         draw_counter(border_reaches)
