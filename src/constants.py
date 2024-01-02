@@ -6,6 +6,8 @@ GAME_TITLE = "Cats Dodge Dogs"
 ## Game state
 SAVE_FILE_NAME = f"{GAME_TITLE.replace(" ", "_")}.json"
 SPECIAL_SCORE = 10
+DEFAULT_HEALTH = 2
+IMMUNITY_TIME = 200
 
 ### Dimensions
 WINDOW_WIDTH = 800
@@ -76,7 +78,6 @@ GRASS_COORDINATES = [(x, 0, 32, 32) for x in range(0, 161, 32)]
 PLANT_COORDINATES = [(x, 32, 32, 32) for x in range(0, 161, 32)]
 
 ### UI
-# web code is:     <area target="" alt="" title="" href="" coords="557,1120,240,1018" shape="rect"> but coords in game are reversed
 START_BUTTON_COORDINATES = (240, 1019, 318, 98)
 
 ### Wrapping
@@ -113,7 +114,9 @@ SPRITE_SCALES = [
         }
     ]
 SPRITE_LIST = ['cat_grey', 'dog_white', 'dog_bw', 'dog_black', 'dog_brown', 'dog_exotic', 'boss_walking', 'boss_boxing',]
-UI_LIST = ['screen_start_normal', 'screen_start_special', 'screen_death', 'overlay_horizon',] # 'overlay_arrow']
+DOUBLE_DAMAGE_DOGS = ['boss_walking', 'boss_boxing',]
+UI_LIST = ['screen_start_normal', 'screen_start_special', 'screen_death', 'overlay_horizon', 'heart', 'heart_bg', 'heart_border'] # 'overlay_arrow']
+SOUND_LIST = ['you-died',]
 
 
 ## Game world
