@@ -120,15 +120,15 @@ def flash_screen_red():
 def draw_counter(border_reaches):
     text = font.render(f"score: {border_reaches}", True, (255, 255, 255))
     text_shadow = font.render(f"score: {border_reaches}", True, (0, 0, 64))
-    game_window.blit(text_shadow, (WINDOW_WIDTH // 2 + 190 + 2, 30+2))
-    game_window.blit(text, (WINDOW_WIDTH // 2 + 190, 30))
+    game_window.blit(text_shadow, (WINDOW_WIDTH // 2 + 220 + 2, 45+2))
+    game_window.blit(text, (WINDOW_WIDTH // 2 + 220, 45))
 
 ### Drawing the high score counter
 def draw_high_score(high_score):
     text = font.render(f"high score: {high_score}", True, (255, 255, 255))
     text_shadow = font.render(f"high score: {high_score}", True, (0, 0, 64))
-    game_window.blit(text_shadow, (WINDOW_WIDTH // 2 + 110 + 2, 70+2))
-    game_window.blit(text, (WINDOW_WIDTH // 2 + 110, 70))
+    game_window.blit(text_shadow, (WINDOW_WIDTH // 2 + 140 + 2, 85+2))
+    game_window.blit(text, (WINDOW_WIDTH // 2 + 140, 85))
 
 ### Drawing the progress bar
 def draw_progress_bar(viewport_y):
