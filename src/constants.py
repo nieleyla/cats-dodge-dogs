@@ -4,7 +4,7 @@
 GAME_TITLE = "Cats Dodge Dogs"
 
 ## Game state
-SAVE_FILE_NAME = f"{GAME_TITLE.replace(" ", "_")}.json"
+SAVE_FILE_NAME = f"{GAME_TITLE.replace(' ', '_')}.json"
 SPECIAL_SCORE = 10
 DEFAULT_HEALTH = 2
 IMMUNITY_TIME = 200
