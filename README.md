@@ -17,7 +17,7 @@
 
 - Add "New High Score" text to end screen and death screen if new high score is set
 - Packaging for distribution via pyinstaller
-- Fix first dog swapping skin once with second dog
+- ~~Fix first dog swapping skin once with second dog~~
 - Enable immediate update to special mode when hitting special score
 - Fix occasional startup lag
 - Some generic refactoring and cleanup tasks
@@ -26,11 +26,10 @@
 - Implement option to switch theme back to normal from special
 - Fix ugly custom cursor border
 - Add collectable treats for healing
-- Add more background flowers
-- Fix progress bar cutoff
+- ~~Fix progress bar cutoff~~
 - Add favicon, flavor etc.
-- Add hurt animation/feedback (red transparent overlay over cat or screen, or text, or animation "bump")
-- Add sounds: cat hurt, cat death, cat happy/heal, dog angry, dog regular, level complete, ~~you died.~~
+- ~~Add hurt animation/feedback (red transparent overlay over cat or screen, or text, or animation "bump")~~
+- Add sounds: ~~cat hurt~~, cat death, cat happy/heal, dog angry, dog regular, level complete, ~~you died.~~
 
 ### Stretch Goals
 
@@ -41,4 +40,4 @@
 
 ### Won't Do
 
-- X
+- Add more background flowers

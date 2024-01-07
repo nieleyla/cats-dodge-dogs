@@ -106,6 +106,16 @@ def fade_black(frames):
         pygame.display.update()
         pygame.time.delay(frames)
 
+### Flashing the screen red
+def flash_screen_red():
+    flash_surface = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT)).convert_alpha()
+    flash_surface.fill((255, 0, 0))
+    for alpha in range(0, 32, 4):
+        flash_surface.set_alpha(alpha)
+        game_window.blit(flash_surface, (0, 0))
+        pygame.display.update()
+        pygame.time.delay(5)
+
 ### Drawing the completions counter
 def draw_counter(border_reaches):
     text = font.render(f"score: {border_reaches}", True, (255, 255, 255))
@@ -122,8 +132,8 @@ def draw_high_score(high_score):
 
 ### Drawing the progress bar
 def draw_progress_bar(viewport_y):
-    progress = viewport_y / (WORLD_HEIGHT - WINDOW_HEIGHT)
-    bar_length = 200  # Total length of the bar
+    progress = (WORLD_HEIGHT - WINDOW_HEIGHT - viewport_y) / (WORLD_HEIGHT - WINDOW_HEIGHT)
+    bar_length = 225  # Total length of the bar
     filled_length = bar_length * progress
     pygame.draw.rect(game_window, (0, 0, 0), (20 + 2, 20 + 2, bar_length, 20))  # Draw the shadow of the bar
     pygame.draw.rect(game_window, (255, 255, 255), (20, 20, bar_length, 20))  # Draw the border of the bar
@@ -349,8 +359,10 @@ def get_animation_frame(sprites, horizontal_movement, vertical_movement, current
     return image, current_frame, frame_count, last_movement
 
 ### Drawing a character
-def draw_character(image, rect, viewport_y):
+def draw_character(image, rect, viewport_y, hurt=False):
     screen_y = rect.y - viewport_y
+    if hurt:
+        image.fill((255, 0, 0, 128), special_flags=pygame.BLEND_RGBA_MULT)
     game_window.blit(image, (rect.x, screen_y))
 
 ### Picking a dog
@@ -456,7 +468,9 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
                 horizontal_dog_movements[i] = -1
                 vertical_dog_movements[i] = 0
             
-            dog_speeds[i] = DOG_SPEED_X + 2*border_reaches*random.randint(1, 100)*0.01
+            #### Dog speed increases with each border reach
+            dog_speeds[i] = min((DOG_SPEED_X + 2*border_reaches*random.randint(1, 100)*0.01), DOG_SPEED_CAP)
+
             #### Apply dog movement
             dog_rects[i].x += horizontal_dog_movements[i] * dog_speeds[i]
             dog_rects[i].y -= vertical_dog_movements[i] * DOG_SPEED_Y
@@ -476,21 +490,27 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
             current_dog_frames.append(0)
             dog_images.append(None)
             dog_speeds.append(DOG_SPEED_X)
+            sounds['level-complete'].play()
             draw_end_screen(border_reaches)
             cat_rect.y = WORLD_HEIGHT - 150 - REF_CAT_HEIGHT # Reset cat position
             viewport_y = WORLD_HEIGHT - WINDOW_HEIGHT # Reset viewport position
 
         ### Check for dog collision
+        cat_hurt = False
         for i, dog in enumerate(dogs):
             if cat_rect.colliderect(dog_rects[i].inflate(dog_rects[i].width//2, -dog_rects[i].height*0.5)):
                 if pygame.time.get_ticks() - last_hit <= IMMUNITY_TIME:
                     pass
                 elif health > 0 and pygame.time.get_ticks() - last_hit > IMMUNITY_TIME:
+                    # cat_hurt = True
                     last_hit = pygame.time.get_ticks()
                     if dog in DOUBLE_DAMAGE_DOGS:
+                        sounds['cat-hurt-hard'].play()
                         health -= 2
                     else:
+                        sounds['cat-hurt-light'].play()
                         health -= 1
+                    flash_screen_red()
                     # Make the dog bounce back
                     horizontal_dog_movements[i] = -horizontal_dog_movements[i] * 4
                     vertical_dog_movements[i] = vertical_cat_movement * 2
@@ -510,12 +530,12 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
 
         ### Animation
         cat_image, current_cat_frame, cat_frame_count, last_cat_movement = get_animation_frame(sprites['cat_grey'], horizontal_cat_movement, vertical_cat_movement, current_cat_frame, cat_frame_count, last_cat_movement, CAT_WALK_FRAMES, CAT_ANIMATION_SPEED)
-        draw_character(cat_image, cat_rect, viewport_y)
+        draw_character(cat_image, cat_rect, viewport_y, hurt=cat_hurt)
         
         for i in range(len(dogs)):
             dog_images[i], current_dog_frames[i], dog_frame_counts[i], last_dog_movements[i] = get_animation_frame(sprites[dogs[i]], horizontal_dog_movements[i], vertical_dog_movements[i], current_dog_frames[i], dog_frame_counts[i], last_dog_movements[i], DOG_WALK_FRAMES, DOG_ANIMATION_SPEED/(0.5*(border_reaches+1)))
             draw_character(dog_images[i], dog_rects[i], viewport_y + len(dog_rects)*DOG_SPEED_Y)
-        
+
         ### Drawing UI
         draw_arrow(viewport_y, 96, (200, 200, 150), 200)
         draw_horizon()
@@ -560,16 +580,18 @@ if __name__ == "__main__":
     ui['heart_border'] = pygame.transform.scale(ui['heart_border'], (int(ui['heart_border'].get_width() * 2), int(ui['heart_border'].get_height() * 2))).convert_alpha()
     
     ### Load and store sounds
-    sounds = {sound: pygame.mixer.Sound(f'assets/audio/{sound}.mp3') for sound in SOUND_LIST}
+    sounds = {sound: pygame.mixer.Sound(f'assets/audio/sounds/{sound}.mp3') for sound in SOUNDS.keys()}
+    for sound, volume in SOUNDS.items():
+        sounds[sound].set_volume(volume)
 
     ## Load high score and special assets if applicable
     high_score = load_game_data()["highscore"]
     if high_score >= SPECIAL_SCORE:
-        pygame.mixer.music.load('assets/audio/blippy_trance.mp3')
+        pygame.mixer.music.load('assets/audio/music/blippy_trance.mp3')
         ui['screen_start'] = ui['screen_start_special']
         cursor = pygame.image.load('assets/ui/cursor_black.cur').convert_alpha()
     else:
-        pygame.mixer.music.load('assets/audio/doobly_doo.mp3')
+        pygame.mixer.music.load('assets/audio/music/doobly_doo.mp3')
         ui['screen_start'] = ui['screen_start_normal']
         cursor = pygame.image.load('assets/ui/cursor_grey.cur').convert_alpha()
 
