@@ -365,6 +365,27 @@ def pick_dog(dogs=[]):
     # Pick a dog
     return np.random.choice(list(dog_weights.keys()), p=list(dog_weights.values()))
 
+### Dog spawn position function
+def get_dog_spawn(dog_rects, border_reaches):
+    # Calculate dynamic gap for this turn (decreses with each border reach)
+    dynamic_gap = max(MIN_GAP - border_reaches * GAP_REDUCTION_FACTOR, REF_DOG_WIDTH)
+    # Calculate the maximum spawn height
+    upper_limit = WORLD_HEIGHT-(WORLD_HEIGHT - VIEWPORT_BUFFER)
+    # Calculate the minimum spawn height
+    lower_limit = dog_start_y
+    
+    tries = 0
+    while True:
+        if tries >= MAX_SPAWN_TRIES:
+            break
+        # Randomize the spawn position within the allowed range
+        spawn_pos = random.randint(*sorted([lower_limit, upper_limit]))
+        tries += 1
+        # Check if the spawn position is too close to another dog
+        if all([abs(spawn_pos - dog_rect.y) > dynamic_gap for dog_rect in dog_rects]):
+            break
+    return (REF_DOG_WIDTH, spawn_pos)
+
 
 # Game Loop
 def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD_HEIGHT-WINDOW_HEIGHT, border_reaches=0, high_score=0):
@@ -447,7 +468,7 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
             high_score = border_reaches
             write_high_score(high_score)
             # Dog spacing depends on number of dogs, number of completions, and LEVEL_HEIGHT:
-            dog_rects.append(idle_dog.get_rect(center=(REF_DOG_WIDTH, dog_start_y + min(len(dogs)*LEVEL_HEIGHT*32*(random.randint(1, 100)*0.1)/border_reaches, int(WINDOW_HEIGHT/2)))))
+            dog_rects.append(idle_dog.get_rect(center=get_dog_spawn(dog_rects, border_reaches)))
             horizontal_dog_movements.append(1)
             vertical_dog_movements.append(0)
             last_dog_movements.append(random.choice(['E','W']))
@@ -564,7 +585,7 @@ if __name__ == "__main__":
     idle_cat = sprites['cat_grey']['ID'][0]
     cat_rect = idle_cat.get_rect(center=(WINDOW_WIDTH // 2, cat_start_y))
     ### Initialize dog
-    dog_start_y = WORLD_HEIGHT - int(1.5*WINDOW_HEIGHT) - REF_DOG_HEIGHT
+    dog_start_y = WORLD_HEIGHT - WINDOW_HEIGHT - REF_DOG_HEIGHT
     idle_dog = sprites['dog_white']['E'][0]
     dog_rects = [idle_dog.get_rect(center=(REF_DOG_WIDTH, dog_start_y))]
 

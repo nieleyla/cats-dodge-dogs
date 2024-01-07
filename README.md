@@ -9,7 +9,7 @@
 - Fix inaccurate boss hitbox (too small)
 - Add keybind explanation overlay
 - ~~Convert assets to pygame native formats (.convert())~~
-- Improve dog spawn positions and spread
+- ~~Improve dog spawn positions and spread~~
 - ~~Add hit points (hearts)~~
 - Finish Credits screen
 

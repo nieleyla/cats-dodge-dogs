@@ -13,6 +13,12 @@ IMMUNITY_TIME = 200
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 1200
 
+### Spawning
+MIN_GAP = 100  # Minimum gap between dogs
+GAP_REDUCTION_FACTOR = 10  # How much the gap reduces per border reach
+VIEWPORT_BUFFER = 300
+MAX_SPAWN_TRIES = 100
+
 
 ## Movement
 
