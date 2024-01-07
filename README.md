@@ -29,7 +29,7 @@
 - ~~Fix progress bar cutoff~~
 - Add favicon, flavor etc.
 - ~~Add hurt animation/feedback (red transparent overlay over cat or screen, or text, or animation "bump")~~
-- Add sounds: ~~cat hurt~~, cat death, cat happy/heal, dog angry, dog regular, level complete, ~~you died.~~
+- Add sounds: ~~cat hurt~~, cat death, cat happy/heal, dog angry, dog regular, ~~level complete~~, ~~you died.~~
 
 ### Stretch Goals
 
