@@ -12,6 +12,7 @@
 - ~~Improve dog spawn positions and spread~~
 - ~~Add hit points (hearts)~~
 - Finish Credits screen
+- Fix hitbox of white dogs
 
 ### Nice-To-Haves
 
