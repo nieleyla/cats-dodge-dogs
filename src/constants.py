@@ -122,7 +122,7 @@ SPRITE_SCALES = [
     ]
 SPRITE_LIST = ['cat_grey', 'dog_white', 'dog_bw', 'dog_black', 'dog_brown', 'dog_exotic', 'boss_walking', 'boss_boxing',]
 DOUBLE_DAMAGE_DOGS = ['boss_walking', 'boss_boxing',]
-UI_LIST = ['screen_start_normal', 'screen_start_special', 'screen_death', 'overlay_horizon', 'heart', 'heart_bg', 'heart_border',] # 'overlay_arrow']
+UI_LIST = ['screen_start_normal', 'screen_start_special', 'screen_death', 'overlay_horizon', 'heart', 'heart_bg', 'heart_border', 'screen_keybinds'] # 'overlay_arrow']
 SOUNDS = {'you-died': 0.5, 'cat-hurt-light': 0.5, 'cat-hurt-hard': 0.5, 'level-complete': 0.25, 'cat-heal': 0.5}
 
 

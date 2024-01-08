@@ -7,7 +7,7 @@
 - ~~Fix Saving / Highscore Issues~~
 - Fix window scaling
 - Fix inaccurate boss hitbox (too small)
-- Add keybind explanation overlay
+- ~~Add keybind explanation overlay~~
 - ~~Convert assets to pygame native formats (.convert())~~
 - ~~Improve dog spawn positions and spread~~
 - ~~Add hit points (hearts)~~

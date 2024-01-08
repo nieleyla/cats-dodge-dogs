@@ -23,7 +23,7 @@ def get_save_path(app_name=GAME_TITLE):
     # elif platform.system() == 'Darwin':  # macOS
     #     return os.path.join(home, 'Library', 'Application Support', app_name)
     # else:  # Linux and other Unix-like OS
-     #    return os.path.join(home, '.local', 'share', app_name)
+    #    return os.path.join(home, '.local', 'share', app_name)
 
 ### Save game data to file
 def save_game_data(data, app_name=GAME_TITLE, file_name=SAVE_FILE_NAME):
@@ -262,6 +262,30 @@ def display_credits():
             fade_black(10)
         pygame.display.update()
 
+### Displaying keybinds
+def display_keybinds():
+    fade_black(10)
+    keybinds = True
+    while keybinds:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        keys = pygame.key.get_pressed()
+
+        game_window.blit(ui['screen_keybinds'], (0, 0))
+        # Assign text_color so it fades in and out
+        text_color = (155 + 100 * np.sin(pygame.time.get_ticks() / 256),) * 3
+        text = font.render("PRESS ANY KEY TO CONTINUE", True, text_color).convert_alpha()
+        text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 - 500))
+        game_window.blit(text, text_rect)
+
+        if any(keys):
+            keybinds = False
+            fade_black(10)
+
+        pygame.display.update()
+
 ### Displaying the menu
 def display_menu(cursor, ui, border_reaches=0):
     fade_black(10)
@@ -423,6 +447,8 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
     dogs = ['dog_white']
     health = DEFAULT_HEALTH
     last_hit = 0
+
+    display_keybinds()
 
     ## Main game loop
     while running:
