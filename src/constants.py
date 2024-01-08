@@ -64,7 +64,7 @@ GREY_CAT_COORDINATES = {
 }
 
 ### Dogs
-DOG_BASE_WEIGHTS = {'dog_white': 3, 'dog_bw': 3, 'dog_black': 2, 'dog_brown': 4, 'dog_exotic': 2, 'boss_walking': 0.5, 'boss_boxing': 0.25}
+DOG_BASE_WEIGHTS = {'dog_white': 3, 'dog_bw': 3, 'dog_black': 2, 'dog_brown': 4, 'dog_exotic': 2, 'boss_walking': 0.25, 'boss_boxing': 0.125}
 DOG_BASE_WEIGHTS = {k: v / sum(DOG_BASE_WEIGHTS.values()) for k, v in DOG_BASE_WEIGHTS.items()}
 
 #### Regular Dog

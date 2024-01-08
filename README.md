@@ -10,24 +10,24 @@
 - ~~Convert assets to pygame native formats (.convert())~~
 - ~~Improve dog spawn positions and spread~~
 - ~~Add hit points (hearts)~~
-- Finish Credits screen
+- ~~Finish Credits screen~~
 - ~~Fix hitboxes of dogs moving down with each level.~~
 
 ### Nice-To-Haves
 
-- Add "New High Score" text to end screen and death screen if new high score is set
+- ~~Add "New High Score" text to end screen~~ and death screen ~~if new high score is set~~
 - Packaging for distribution via pyinstaller
 - ~~Fix first dog swapping skin once with second dog~~
 - Enable immediate update to special mode when hitting special score
 - Fix occasional startup lag
-- Some generic refactoring and cleanup tasks (*)
+- Some generic refactoring and cleanup tasks
 - Implement button click animation
 - ~~Implement credits screen~~
 - Implement option to switch theme back to normal from special
 - Fix ugly custom cursor border
 - Add collectable treats for healing
 - ~~Fix progress bar cutoff~~
-- Add favicon, flavor etc. (*)
+- Add favicon, flavor etc.
 - ~~Add hurt animation/feedback (red transparent overlay over cat or screen, or text, or animation "bump")~~
 - Add sounds: ~~cat hurt~~, cat death, cat happy/heal, dog angry, dog regular, ~~level complete~~, ~~you died.~~
 

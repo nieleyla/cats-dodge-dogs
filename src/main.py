@@ -1,6 +1,5 @@
 # Imports
 import os
-import platform
 import json
 import pygame
 import random
@@ -174,25 +173,35 @@ def draw_arrow(viewport_y, size=128, color=(255, 255, 0), alpha=128):
         (size // 2, size * 2 // 3), # Middle
         (0, size)                   # Bottom left
     ]
-    # Draw the arrow
     alpha = 180 + 60 * np.sin(pygame.time.get_ticks() / 256)
     pygame.draw.polygon(arrow_surface, color + (alpha,), arrow_points)
-    # Blit the arrow surface onto the main screen
     game_window.blit(arrow_surface, position)
 
 
 ## Drawing the level end screen
-def draw_end_screen(border_reaches):
+def draw_end_screen(border_reaches, old_high_score=0):
     fade_surface = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
     fade_surface.fill((0, 0, 0))
+        
     text = font.render(f"score: {border_reaches}", True, (255, 255, 255))
+    text_hs = font.render("NEW HIGH SCORE!", True, (255, 255, 0))
+    text_ss = font.render("YOU UNLOCKED SPECIAL MUSIC AND START SCREEN!", True, (255, 190, 200))
     for alpha in np.linspace(0, 255, 60):
         fade_surface.set_alpha(alpha)
         text.set_alpha(alpha)
+        text_ss.set_alpha(alpha)
+        text_hs.set_alpha(alpha)
         game_window.blit(text, (WINDOW_WIDTH // 2 - text.get_width() // 2, WINDOW_HEIGHT // 2 - text.get_height() // 2))
+        delay = 10
+        if border_reaches > old_high_score:
+            game_window.blit(text_hs, (WINDOW_WIDTH // 2 - text_hs.get_width() // 2, WINDOW_HEIGHT // 2 + 50 - text_hs.get_height() // 2))
+            delay = 20
+        if border_reaches >= SPECIAL_SCORE:
+            game_window.blit(text_ss, (WINDOW_WIDTH // 2 - text_ss.get_width() // 2, WINDOW_HEIGHT // 2 + 100 - text_ss.get_height() // 2))
+            delay = 50
         game_window.blit(fade_surface, (0, 0))
         pygame.display.update()
-        pygame.time.delay(20)
+        pygame.time.delay(delay)
     pygame.display.update()
 
 ## Drawing the game over screen: Fade in 'screen_death' from ui and then
@@ -202,7 +211,7 @@ def draw_game_over_screen(border_reaches):
 
     fade_surface = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
     fade_surface.fill((0, 0, 0))
-    for alpha in range(0, 256, 5):  # Faster fade to black
+    for alpha in range(0, 256, 5):
         fade_surface.set_alpha(alpha)
         game_window.blit(fade_surface, (0, 0))
         pygame.display.update()
@@ -213,8 +222,8 @@ def draw_game_over_screen(border_reaches):
         text = pygame.font.Font.render(font, "YOU DIED", True, (255, 0, 0))
         text = pygame.transform.scale(text, (int(text.get_width() * (size / 100)), int(text.get_height() * (size / 100))))
         text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
-        game_window.blit(fade_surface, (0, 0))  # Redraw black background
-        game_window.blit(text, text_rect)       # Draw main text
+        game_window.blit(fade_surface, (0, 0))
+        game_window.blit(text, text_rect)
         pygame.display.update()
         pygame.time.delay(10)
     pygame.time.delay(500)
@@ -227,7 +236,9 @@ def draw_game_over_screen(border_reaches):
 
     # Display high score
     high_score = load_game_data()["highscore"]
-    high_score_text = pygame.font.Font.render(font, f"high score: {high_score}", True, (255, 255, 255))
+    msg = f"high score: {high_score}"
+    color = (255, 255, 255)
+    high_score_text = pygame.font.Font.render(font, msg, True, color)
     high_score_rect = high_score_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + 120))
     game_window.blit(high_score_text, high_score_rect)
     pygame.display.update()
@@ -254,7 +265,7 @@ def display_credits():
 
         for i, line in enumerate(credits_text):
             text = font.render(line.strip(), True, (255, 255, 255))
-            text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + i * 30))
+            text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, 100 + i * 30))
             game_window.blit(text, text_rect)
 
         if keys[pygame.K_c]:
@@ -272,8 +283,8 @@ def display_keybinds():
                 pygame.quit()
                 quit()
         keys = pygame.key.get_pressed()
-
-        pygame.draw.rect(game_window, (85, 170, 170), (0, 0, WINDOW_WIDTH, WINDOW_HEIGHT))
+        color = (85, 170, 170) if load_game_data()["highscore"] < SPECIAL_SCORE else (254, 140, 180)
+        pygame.draw.rect(game_window, color, (0, 0, WINDOW_WIDTH, WINDOW_HEIGHT))
         game_window.blit(ui['screen_keybinds'], (0, 0))
 
         # Assign text_color so it fades in and out
@@ -311,8 +322,6 @@ def display_menu(cursor, ui, border_reaches=0):
             else:
                 pygame.mixer.music.set_volume(0.0)
                 pygame.time.delay(100)
-        # TODO if keys[pygame.K_x]:
-        # TODO    write_high_score(0) 
         
         if keys[pygame.K_q]:
             pygame.quit()
@@ -324,17 +333,19 @@ def display_menu(cursor, ui, border_reaches=0):
             if pygame.Rect(START_BUTTON_COORDINATES).collidepoint(pygame.mouse.get_pos()) or keys[pygame.K_RETURN]:
                 menu = False
                 fade_black(10)
-        # Cheat/debug keys
-        if keys[pygame.K_1]:
-            border_reaches += 1
-            high_score = border_reaches
-            write_high_score(high_score)
-            pygame.time.delay(100)
-        if keys[pygame.K_2]:
-            border_reaches = 0
-            high_score = border_reaches
-            write_high_score(high_score)
-            pygame.time.delay(100)
+        
+        if DEBUG:
+            # Cheat/debug keys
+            if keys[pygame.K_1]:
+                border_reaches += 1
+                high_score = border_reaches
+                write_high_score(high_score)
+                pygame.time.delay(100)
+            if keys[pygame.K_2]:
+                border_reaches = 0
+                high_score = border_reaches
+                write_high_score(high_score)
+                pygame.time.delay(100)
 
         high_score = load_game_data()["highscore"]
         draw_counter(border_reaches)
@@ -414,8 +425,8 @@ def draw_character(image, rect, viewport_y, offset=(0, 0), type=None):
 def pick_dog(dogs=[]):
     dog_weights = DOG_BASE_WEIGHTS.copy()
     # Increase the weight of exotic and boss dogs based on the number of dogs
-    dog_weights['boss_walking'] += len(dogs)*0.5
-    dog_weights['boss_boxing'] += len(dogs)*0.25
+    dog_weights['boss_walking'] += len(dogs)*0.1
+    dog_weights['boss_boxing'] += len(dogs)*0.05
     # Normalize weights
     dog_weights = {k: v / sum(dog_weights.values()) for k, v in dog_weights.items()}
     # Pick a dog
@@ -452,8 +463,8 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
     
     ### Animation initialization
     first_run = True
-    last_cat_movement = 'N'  # Start with player facing north
-    last_dog_movements = ['E'] # Start with dogs facing east
+    last_cat_movement = 'N'
+    last_dog_movements = ['E']
     current_cat_frame = 0
     current_dog_frames = [0]
     cat_frame_count = 0
@@ -526,6 +537,7 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
             border_reaches += 1
             picked_dog = pick_dog(dogs)
             dogs.append(picked_dog)
+            old_high_score = load_game_data()["highscore"]
             high_score = border_reaches
             write_high_score(high_score)
             dog_spawn = get_dog_spawn(dog_rects, border_reaches)
@@ -541,9 +553,9 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
             dog_images.append(None)
             dog_speeds.append(DOG_SPEED_X)
             sounds['level-complete'].play()
-            draw_end_screen(border_reaches)
-            cat_rect.y = WORLD_HEIGHT - 150 - REF_CAT_HEIGHT # Reset cat position
-            viewport_y = WORLD_HEIGHT - WINDOW_HEIGHT # Reset viewport position
+            draw_end_screen(border_reaches, old_high_score)
+            cat_rect.y = WORLD_HEIGHT - 150 - REF_CAT_HEIGHT
+            viewport_y = WORLD_HEIGHT - WINDOW_HEIGHT
 
         ### Check for dog collision
         for i, dog in enumerate(dogs):
@@ -560,7 +572,6 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
                         sounds['cat-hurt-light'].play()
                         health -= 1
                     flash_screen_red()
-                    # Make the dog bounce back
                     horizontal_dog_movements[i] = -horizontal_dog_movements[i]*4
                     vertical_dog_movements[i] = vertical_cat_movement*2
                 else:
@@ -648,11 +659,10 @@ if __name__ == "__main__":
     world_surface = pygame.Surface((WORLD_WIDTH, WORLD_HEIGHT)).convert()
     fill_world_with_tiles([sprites['grass'],]) # plant_textures])
     draw_noise()
-    #draw_level_border()
 
     ## Initialize characters
     ### Initialize cat   
-    cat_start_y = WORLD_HEIGHT - int(0.25*WINDOW_HEIGHT) - REF_CAT_HEIGHT  # Start position near the bottom of the world
+    cat_start_y = WORLD_HEIGHT - int(0.25*WINDOW_HEIGHT) - REF_CAT_HEIGHT
     idle_cat = sprites['cat_grey']['ID'][0]
     cat_rect = idle_cat.get_rect(center=(WINDOW_WIDTH // 2, cat_start_y))
     ### Initialize dog
