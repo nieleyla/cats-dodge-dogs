@@ -414,9 +414,8 @@ def draw_character(image, rect, viewport_y, offset=(0, 0), type=None):
 def pick_dog(dogs=[]):
     dog_weights = DOG_BASE_WEIGHTS.copy()
     # Increase the weight of exotic and boss dogs based on the number of dogs
-    dog_weights['dog_exotic'] += len(dogs) * 0.2
-    dog_weights['boss_walking'] += len(dogs) * 0.1
-    dog_weights['boss_boxing'] += len(dogs) * 0.05
+    dog_weights['boss_walking'] += len(dogs)*0.5
+    dog_weights['boss_boxing'] += len(dogs)*0.25
     # Normalize weights
     dog_weights = {k: v / sum(dog_weights.values()) for k, v in dog_weights.items()}
     # Pick a dog

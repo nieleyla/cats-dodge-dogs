@@ -9,7 +9,7 @@ DEBUG = False
 
 ## Game mechanics
 SPECIAL_SCORE = 10
-DEFAULT_HEALTH = 20
+DEFAULT_HEALTH = 2
 HEAL_AMOUNT = 1
 IMMUNITY_TIME = 200
 CAT_HITBOX_SCALE_X = 1
@@ -64,7 +64,7 @@ GREY_CAT_COORDINATES = {
 }
 
 ### Dogs
-DOG_BASE_WEIGHTS = {'dog_white': 0.2, 'dog_bw': 0.2, 'dog_black': 0.2, 'dog_brown': 0.2, 'dog_exotic': 0.1, 'boss_walking': 0.05, 'boss_boxing': 0.05}
+DOG_BASE_WEIGHTS = {'dog_white': 3, 'dog_bw': 3, 'dog_black': 2, 'dog_brown': 4, 'dog_exotic': 2, 'boss_walking': 0.5, 'boss_boxing': 0.25}
 DOG_BASE_WEIGHTS = {k: v / sum(DOG_BASE_WEIGHTS.values()) for k, v in DOG_BASE_WEIGHTS.items()}
 
 #### Regular Dog
