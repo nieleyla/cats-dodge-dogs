@@ -19,7 +19,7 @@ DOG_HITBOX_SCALE_Y = 0.6
 
 ### Dimensions
 WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 1200
+WINDOW_HEIGHT = 1080
 
 ### Spawning
 MIN_GAP = 100  # Minimum gap between dogs
@@ -92,7 +92,7 @@ GRASS_COORDINATES = [(x, 0, 32, 32) for x in range(0, 161, 32)]
 PLANT_COORDINATES = [(x, 32, 32, 32) for x in range(0, 161, 32)]
 
 ### UI
-START_BUTTON_COORDINATES = (240, 1019, 318, 98)
+START_BUTTON_COORDINATES = (240, 951, 318, 98)
 
 ### Wrapping
 SPRITE_COORDINATES = {
