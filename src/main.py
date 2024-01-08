@@ -273,7 +273,9 @@ def display_keybinds():
                 quit()
         keys = pygame.key.get_pressed()
 
+        pygame.draw.rect(game_window, (85, 170, 170), (0, 0, WINDOW_WIDTH, WINDOW_HEIGHT))
         game_window.blit(ui['screen_keybinds'], (0, 0))
+
         # Assign text_color so it fades in and out
         text_color = (155 + 100 * np.sin(pygame.time.get_ticks() / 256),) * 3
         text = font.render("PRESS ANY KEY TO CONTINUE", True, text_color).convert_alpha()
@@ -343,8 +345,10 @@ def display_menu(cursor, ui, border_reaches=0):
 ## Animation
 
 ### Retrieval of current animation frame
-def get_animation_frame(sprites, horizontal_movement, vertical_movement, current_frame, frame_count, last_movement, walk_frames, animation_speed):
+def get_animation_frame(sprites, horizontal_movement, vertical_movement, current_frame, frame_count, last_movement, walk_frames, animation_speed, type=None):
     current_time = pygame.time.get_ticks()
+    offset = (0, 0)
+
     if current_time - frame_count > animation_speed:
         frame_count = current_time
         current_frame = (current_frame + 1) % walk_frames
@@ -353,41 +357,58 @@ def get_animation_frame(sprites, horizontal_movement, vertical_movement, current
         if vertical_movement < 0:  # Moving down
             image = sprites['S'][current_frame]
             last_movement = 'S'
+            offset = (0, -10)
         if vertical_movement > 0:  # Moving up
             image = sprites['N'][current_frame]
             last_movement = 'N'
         if horizontal_movement > 0:  # Moving right
             image = sprites['E'][current_frame]
             last_movement = 'E'
+            offset = (-30, 0)
         if horizontal_movement < 0:  # Moving left
             image = sprites['W'][current_frame]
             last_movement = 'W'
+            offset = (-10, 0)
         if horizontal_movement > 0 and vertical_movement < 0:  # Moving down-right
             image = sprites['SE'][current_frame]
             last_movement = 'SE'
+            offset = (-40, 10)
         if horizontal_movement > 0 and vertical_movement > 0:  # Moving up-right
             image = sprites['NE'][current_frame]
             last_movement = 'NE'
+            offset = (-40, 10)
         if horizontal_movement < 0 and vertical_movement < 0:  # Moving down-left
             image = sprites['SW'][current_frame]
             last_movement = 'SW'
         if horizontal_movement < 0 and vertical_movement > 0:  # Moving up-left
             image = sprites['NW'][current_frame]
             last_movement = 'NW'
+            offset = (0, 10)
         if horizontal_movement == 0 and vertical_movement == 0:  # Idle
             idle_mapping = {'N': 0, 'NE': 1, 'E': 1, 'SE': 1, 'S': 2, 'SW': 2, 'W': 3, 'NW': 3}
             image = sprites['ID'][idle_mapping[last_movement]]
+            offset = (-50, 0) if last_movement == 'E' else offset
     except KeyError:
         image = sprites['E'][0]
-
-    return image, current_frame, frame_count, last_movement
+    
+    offset = (0, 0) if type == "dog" else offset
+    return image, current_frame, frame_count, last_movement, offset
 
 ### Drawing a character
-def draw_character(image, rect, viewport_y, hurt=False):
-    screen_y = rect.y - viewport_y
-    if hurt:
-        image.fill((255, 0, 0, 128), special_flags=pygame.BLEND_RGBA_MULT)
-    game_window.blit(image, (rect.x, screen_y))
+def draw_character(image, rect, viewport_y, offset=(0, 0), type=None):
+    draw_rect = rect.move(offset)
+    screen_y = draw_rect.y - viewport_y
+    game_window.blit(image, (draw_rect.x, screen_y))
+    if DEBUG:
+        bound_rect = (draw_rect.x, screen_y, draw_rect.width, draw_rect.height)
+        pygame.draw.rect(game_window, (255, 0, 0), bound_rect, 1)
+        if type == "cat":
+            collision_rect = rect.scale_by(CAT_HITBOX_SCALE_X, CAT_HITBOX_SCALE_Y)
+            collision_rect.y -= viewport_y
+        if type == "dog":
+            collision_rect = rect.scale_by(DOG_HITBOX_SCALE_X, DOG_HITBOX_SCALE_Y)
+            collision_rect.y -= viewport_y
+        pygame.draw.rect(game_window, (0, 255, 0), collision_rect, 1)
 
 ### Picking a dog
 def pick_dog(dogs=[]):
@@ -499,16 +520,20 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
 
             #### Apply dog movement
             dog_rects[i].x += horizontal_dog_movements[i] * dog_speeds[i]
-            dog_rects[i].y -= vertical_dog_movements[i] * DOG_SPEED_Y
+            dog_rects[i].y -= vertical_dog_movements[i]
         
         #### Check for border collision
         if cat_rect.top <= viewport_y - cat_rect.height:
             border_reaches += 1
-            dogs.append(pick_dog(dogs))
+            picked_dog = pick_dog(dogs)
+            dogs.append(picked_dog)
             high_score = border_reaches
             write_high_score(high_score)
-            # Dog spacing depends on number of dogs, number of completions, and LEVEL_HEIGHT:
-            dog_rects.append(idle_dog.get_rect(center=get_dog_spawn(dog_rects, border_reaches)))
+            dog_spawn = get_dog_spawn(dog_rects, border_reaches)
+            if picked_dog in ['boss_walking', 'boss_boxing']:
+                dog_rects.append(idle_boss.get_rect(center=dog_spawn))
+            else:
+                dog_rects.append(idle_dog.get_rect(center=dog_spawn))
             horizontal_dog_movements.append(1)
             vertical_dog_movements.append(0)
             last_dog_movements.append(random.choice(['E','W']))
@@ -522,9 +547,8 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
             viewport_y = WORLD_HEIGHT - WINDOW_HEIGHT # Reset viewport position
 
         ### Check for dog collision
-        cat_hurt = False
         for i, dog in enumerate(dogs):
-            if cat_rect.colliderect(dog_rects[i].inflate(dog_rects[i].width//2, -dog_rects[i].height*0.5)):
+            if cat_rect.scale_by(CAT_HITBOX_SCALE_X, CAT_HITBOX_SCALE_Y).colliderect(dog_rects[i].scale_by(DOG_HITBOX_SCALE_X, DOG_HITBOX_SCALE_Y)):
                 if pygame.time.get_ticks() - last_hit <= IMMUNITY_TIME:
                     pass
                 elif health > 0 and pygame.time.get_ticks() - last_hit > IMMUNITY_TIME:
@@ -538,8 +562,8 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
                         health -= 1
                     flash_screen_red()
                     # Make the dog bounce back
-                    horizontal_dog_movements[i] = -horizontal_dog_movements[i] * 4
-                    vertical_dog_movements[i] = vertical_cat_movement * 2
+                    horizontal_dog_movements[i] = -horizontal_dog_movements[i]*4
+                    vertical_dog_movements[i] = vertical_cat_movement*2
                 else:
                     draw_game_over_screen(border_reaches)
                     cat_rect.y = WORLD_HEIGHT - 150 - REF_CAT_HEIGHT
@@ -555,12 +579,12 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
         game_window.blit(world_surface, (0, 0), visible_rect)
 
         ### Animation
-        cat_image, current_cat_frame, cat_frame_count, last_cat_movement = get_animation_frame(sprites['cat_grey'], horizontal_cat_movement, vertical_cat_movement, current_cat_frame, cat_frame_count, last_cat_movement, CAT_WALK_FRAMES, CAT_ANIMATION_SPEED)
-        draw_character(cat_image, cat_rect, viewport_y, hurt=cat_hurt)
+        cat_image, current_cat_frame, cat_frame_count, last_cat_movement, offset = get_animation_frame(sprites['cat_grey'], horizontal_cat_movement, vertical_cat_movement, current_cat_frame, cat_frame_count, last_cat_movement, CAT_WALK_FRAMES, CAT_ANIMATION_SPEED, type="cat")
+        draw_character(cat_image, cat_rect, viewport_y, offset, type="cat")
         
         for i in range(len(dogs)):
-            dog_images[i], current_dog_frames[i], dog_frame_counts[i], last_dog_movements[i] = get_animation_frame(sprites[dogs[i]], horizontal_dog_movements[i], vertical_dog_movements[i], current_dog_frames[i], dog_frame_counts[i], last_dog_movements[i], DOG_WALK_FRAMES, DOG_ANIMATION_SPEED/(0.5*(border_reaches+1)))
-            draw_character(dog_images[i], dog_rects[i], viewport_y + len(dog_rects)*DOG_SPEED_Y)
+            dog_images[i], current_dog_frames[i], dog_frame_counts[i], last_dog_movements[i], offset = get_animation_frame(sprites[dogs[i]], horizontal_dog_movements[i], vertical_dog_movements[i], current_dog_frames[i], dog_frame_counts[i], last_dog_movements[i], DOG_WALK_FRAMES, DOG_ANIMATION_SPEED/(0.5*(border_reaches+1)), type="dog")
+            draw_character(dog_images[i], dog_rects[i], viewport_y, type="dog")
 
         ### Drawing UI
         draw_arrow(viewport_y, 96, (200, 200, 150), 200)
@@ -635,6 +659,7 @@ if __name__ == "__main__":
     ### Initialize dog
     dog_start_y = WORLD_HEIGHT - WINDOW_HEIGHT - REF_DOG_HEIGHT
     idle_dog = sprites['dog_white']['E'][0]
+    idle_boss = sprites['boss_walking']['E'][0]
     dog_rects = [idle_dog.get_rect(center=(REF_DOG_WIDTH, dog_start_y))]
 
     ## Start the game

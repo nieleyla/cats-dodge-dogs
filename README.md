@@ -6,13 +6,13 @@
 
 - ~~Fix Saving / Highscore Issues~~
 - Fix window scaling
-- Fix inaccurate boss hitbox (too small)
+- ~~Fix inaccurate boss hitbox (too small)~~
 - ~~Add keybind explanation overlay~~
 - ~~Convert assets to pygame native formats (.convert())~~
 - ~~Improve dog spawn positions and spread~~
 - ~~Add hit points (hearts)~~
 - Finish Credits screen
-- Fix hitbox of white dogs
+- ~~Fix hitboxes of dogs moving down with each level.~~
 
 ### Nice-To-Haves
 

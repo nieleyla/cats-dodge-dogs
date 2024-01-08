@@ -5,9 +5,17 @@ GAME_TITLE = "Cats Dodge Dogs"
 
 ## Game state
 SAVE_FILE_NAME = f"{GAME_TITLE.replace(' ', '_')}.json"
+DEBUG = False
+
+## Game mechanics
 SPECIAL_SCORE = 10
-DEFAULT_HEALTH = 2
+DEFAULT_HEALTH = 20
+HEAL_AMOUNT = 1
 IMMUNITY_TIME = 200
+CAT_HITBOX_SCALE_X = 1
+CAT_HITBOX_SCALE_Y = 0.9
+DOG_HITBOX_SCALE_X = 0.8
+DOG_HITBOX_SCALE_Y = 0.6
 
 ### Dimensions
 WINDOW_WIDTH = 800
@@ -16,7 +24,7 @@ WINDOW_HEIGHT = 1200
 ### Spawning
 MIN_GAP = 100  # Minimum gap between dogs
 GAP_REDUCTION_FACTOR = 10  # How much the gap reduces per border reach
-VIEWPORT_BUFFER = 300
+VIEWPORT_BUFFER = 600
 MAX_SPAWN_TRIES = 100
 
 
@@ -26,7 +34,6 @@ MAX_SPAWN_TRIES = 100
 CAT_SPEED_X = 8 # Horizontal movement speed
 CAT_SPEED_Y = 16 # Vertical movement speed
 DOG_SPEED_X = 8 # Horizontal movement speed
-DOG_SPEED_Y = 8 # Vertical movement speed
 DOG_SPEED_CAP = DOG_SPEED_X * 4 # Maximum dog speed
 
 
