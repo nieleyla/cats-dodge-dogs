@@ -1,5 +1,6 @@
 # Imports
 import os
+import platform
 import json
 import pygame
 import random
@@ -15,14 +16,16 @@ from constants import *
 
 ### Get platform-specific path to save directory
 def get_save_path(app_name=GAME_TITLE):
-    return os.path.join(os.getcwd(), app_name)
-    # home = os.path.expanduser('~')
-    # if platform.system() == 'Windows':
-    #     return os.path.join(os.getenv('APPDATA', home), app_name)
-    # elif platform.system() == 'Darwin':  # macOS
-    #     return os.path.join(home, 'Library', 'Application Support', app_name)
-    # else:  # Linux and other Unix-like OS
-    #    return os.path.join(home, '.local', 'share', app_name)
+    try:
+        home = os.path.expanduser('~')
+        if platform.system() == 'Windows':
+            return os.path.join(os.getenv('APPDATA', home), app_name)
+        elif platform.system() == 'Darwin':  # macOS
+            return os.path.join(home, 'Library', 'Application Support', app_name)
+        else:  # Linux and other Unix-like OS
+            return os.path.join(home, '.local', 'share', app_name)
+    except Exception:
+        return os.path.join(os.getcwd(), app_name)
 
 ### Save game data to file
 def save_game_data(data, app_name=GAME_TITLE, file_name=SAVE_FILE_NAME):
@@ -39,6 +42,12 @@ def load_game_data(app_name=GAME_TITLE, file_name=SAVE_FILE_NAME):
         with open(file_path, 'r') as file:
             return json.load(file)
     return {"highscore": 0}
+
+### Delete save data
+def delete_save_data(app_name=GAME_TITLE, file_name=SAVE_FILE_NAME):
+    file_path = os.path.join(get_save_path(app_name), file_name)
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
 ### Write high score to file
 def write_high_score(score):
@@ -251,7 +260,7 @@ def draw_game_over_screen(border_reaches):
 
 ### Displaying credits
 def display_credits():
-    with open('assets/ui/credits.txt', 'r') as file:
+    with open(os.path.join(os.path.dirname(__file__), f'assets/ui/credits.txt'), 'r') as file:
         credits_text = file.readlines()
 
     fade_black(10)
@@ -260,7 +269,6 @@ def display_credits():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                quit()
         keys = pygame.key.get_pressed()
 
         for i, line in enumerate(credits_text):
@@ -281,7 +289,6 @@ def display_keybinds():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                quit()
         keys = pygame.key.get_pressed()
         color = (85, 170, 170) if load_game_data()["highscore"] < SPECIAL_SCORE else (254, 140, 180)
         pygame.draw.rect(game_window, color, (0, 0, WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -310,7 +317,6 @@ def display_menu(cursor, ui, border_reaches=0):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                quit()
         keys = pygame.key.get_pressed()
         game_window.blit(cursor, pygame.mouse.get_pos())
 
@@ -318,16 +324,19 @@ def display_menu(cursor, ui, border_reaches=0):
         if keys[pygame.K_m]:
             if pygame.mixer.music.get_volume() == 0.0:
                 pygame.mixer.music.set_volume(0.2)
-                pygame.time.delay(100)
+                pygame.time.delay(250) # Lazy way to debounce
             else:
                 pygame.mixer.music.set_volume(0.0)
-                pygame.time.delay(100)
+                pygame.time.delay(250) # Lazy way to debounce
         
         if keys[pygame.K_q]:
             pygame.quit()
             quit()
         if keys[pygame.K_c]:
             display_credits()
+        if keys[pygame.K_DELETE]:
+            delete_save_data()
+            pygame.quit()
 
         if pygame.mouse.get_pressed()[0] or keys[pygame.K_RETURN] or keys[pygame.K_ESCAPE]:
             if pygame.Rect(START_BUTTON_COORDINATES).collidepoint(pygame.mouse.get_pos()) or keys[pygame.K_RETURN]:
@@ -611,28 +620,42 @@ def game_loop(sprites, cursor, ui, cat_rect, dog_rects, sounds, viewport_y=WORLD
         pygame.display.update()
         clock.tick(FPS)
 
-    pygame.quit()
+    pygame.quit(0)
 
 
 
 # Main function
 if __name__ == "__main__":
+    
+    ## Windows-specific instructions
+    if platform.system() == 'Windows':
+        os.system('cls')
+        print(f"\n\nWelcome to {GAME_TITLE}!\n\n\nYou can safely minimize (not close) this console window.\nThis window needs to be opened - otherwise Windows will be suspicious of the game and block it from running.") # This is because Microsoft decided to be extremely paranoid about PyInstaller-generated executables such as this one. Boo!!
+        print(f"\n\nSince we need to open this window, we might as well use it to give you some cool cat facts.\nHere's your cat fact of the day:\n")
+        with open(os.path.join(os.path.dirname(__file__), os.path.abspath(os.path.join(os.path.dirname(__file__), f'assets/ui/cat-facts.txt'))), 'r', encoding="utf-8") as file:
+            cat_facts = file.readlines()
+            print(random.choice(cat_facts))
+        print("\n\nNow enjoy the game - and try to reach a score of 10 for a surprise!!\n\n")
+        print("  ／l、\n（ﾟ､ ｡ ７\n  l  ~ヽ\n  じしf_,)ノ\n") # Cat ASCII art
+    else:
+        print("Uhh... I don't know why you're reading this, but you're not on Windows, so you can just ignore this message and minimize this window. Enjoy the game, I guess? :p")
 
     ## Initialize Pygame
     pygame.init()
     game_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption(GAME_TITLE)
+    pygame.display.set_icon(pygame.image.load(os.path.abspath(os.path.join(os.path.dirname(__file__), f'assets/ui/icon.png'))).convert_alpha())
 
     ## Load assets
 
     ### Load, pregenerate, and store sprites
-    sprites = {sprite: generate_sprites(load_sprite_sheet(f'assets/sprites/{sprite}.png').convert_alpha(), SPRITE_COORDINATES[sprite], SPRITE_SCALES[0][sprite], SPRITE_SCALES[1][sprite]) for sprite in SPRITE_LIST}
-    sprites.update({'grass': [get_sprite(load_sprite_sheet('assets/sprites/grass.png').convert(), *coord, TILE_SCALE, TILE_SCALE) for coord in GRASS_COORDINATES]})
-    sprites.update({'plant': [get_sprite(load_sprite_sheet('assets/sprites/plants.png').convert(), *coord, TILE_SCALE, TILE_SCALE) for coord in PLANT_COORDINATES]})
+    sprites = {sprite: generate_sprites(load_sprite_sheet(os.path.abspath(os.path.join(os.path.dirname(__file__), f'assets/sprites/{sprite}.png'))).convert_alpha(), SPRITE_COORDINATES[sprite], SPRITE_SCALES[0][sprite], SPRITE_SCALES[1][sprite]) for sprite in SPRITE_LIST}
+    sprites.update({'grass': [get_sprite(load_sprite_sheet(os.path.abspath(os.path.join(os.path.dirname(__file__), f'assets/sprites/grass.png'))).convert(), *coord, TILE_SCALE, TILE_SCALE) for coord in GRASS_COORDINATES]})
+    # sprites.update({'plant': [get_sprite(load_sprite_sheet(os.path.abspath(os.path.join(os.path.dirname(__file__), f'assets/sprites/plants.png'))).convert(), *coord, TILE_SCALE, TILE_SCALE) for coord in PLANT_COORDINATES]})
     
     ### Load and store UI elements
-    ui = {ui_element: pygame.image.load(f'assets/ui/{ui_element}.png').convert_alpha() for ui_element in UI_LIST}
-    font = pygame.font.Font("assets/ui/pico-8.otf", 24)
+    ui = {ui_element: pygame.image.load(os.path.abspath(os.path.join(os.path.dirname(__file__), f'assets/ui/{ui_element}.png'))).convert_alpha() for ui_element in UI_LIST}
+    font = pygame.font.Font(os.path.abspath(os.path.join(os.path.dirname(__file__), f'assets/ui/pico-8.otf')), 24)
 
     ### Resize UI elements
     ui['heart'] = pygame.transform.scale(ui['heart'], (int(ui['heart'].get_width() * 2), int(ui['heart'].get_height() * 2))).convert_alpha()
@@ -640,20 +663,20 @@ if __name__ == "__main__":
     ui['heart_border'] = pygame.transform.scale(ui['heart_border'], (int(ui['heart_border'].get_width() * 2), int(ui['heart_border'].get_height() * 2))).convert_alpha()
     
     ### Load and store sounds
-    sounds = {sound: pygame.mixer.Sound(f'assets/audio/sounds/{sound}.mp3') for sound in SOUNDS.keys()}
+    sounds = {sound: pygame.mixer.Sound(os.path.abspath(os.path.join(os.path.dirname(__file__), f'assets/audio/sounds/{sound}.mp3'))) for sound in SOUNDS.keys()}
     for sound, volume in SOUNDS.items():
         sounds[sound].set_volume(volume)
 
     ## Load high score and special assets if applicable
     high_score = load_game_data()["highscore"]
     if high_score >= SPECIAL_SCORE:
-        pygame.mixer.music.load('assets/audio/music/blippy_trance.mp3')
+        pygame.mixer.music.load(os.path.abspath(os.path.join(os.path.dirname(__file__), f'assets/audio/music/blippy_trance.mp3')))
         ui['screen_start'] = ui['screen_start_special']
-        cursor = pygame.image.load('assets/ui/cursor_black.cur').convert_alpha()
+        cursor = pygame.image.load(os.path.abspath(os.path.join(os.path.dirname(__file__), f'assets/ui/cursor_black.cur'))).convert_alpha()
     else:
-        pygame.mixer.music.load('assets/audio/music/doobly_doo.mp3')
+        pygame.mixer.music.load(os.path.join(os.path.dirname(__file__), f'assets/audio/music/doobly_doo.mp3'))
         ui['screen_start'] = ui['screen_start_normal']
-        cursor = pygame.image.load('assets/ui/cursor_grey.cur').convert_alpha()
+        cursor = pygame.image.load(os.path.abspath(os.path.join(os.path.dirname(__file__), f'assets/ui/cursor_grey.cur'))).convert_alpha()
 
     ## Initialize game world
     world_surface = pygame.Surface((WORLD_WIDTH, WORLD_HEIGHT)).convert()
