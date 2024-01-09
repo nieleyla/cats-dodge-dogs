@@ -29,4 +29,4 @@ If you encounter any bugs, please report them in the [issues](https://github.com
 
 ## Credits
 
-See [assets/ui/credits.txt](credits.txt).
+See [credits.txt](assets/ui/credits.txt).
