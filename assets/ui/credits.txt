@@ -22,7 +22,13 @@ FLIFLIFLY
 font:
 PICO-8
 
+icon:
+ICONS8.COM
+
 open source libraries:
 PYGAME
 NUMPY
 PERLIN-NOISE
+
+cat facts courtesy of:
+GITHUB.COM/DRAIOS/BASHBOT-SCRIPTS/CAT-FACTS.TXT
