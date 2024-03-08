@@ -1,5 +1,7 @@
 # Cats Dodge Dogs 😼🐕
 
+SEQUEL IN DEVELOPMENT: https://github.com/lukasgabriel/cats-dodge-dogs-2
+
 ## Description
 
 Try to get to the top of the level without getting hit by a dog!</br>
